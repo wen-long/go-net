@@ -10,7 +10,7 @@ import (
 	"net"
 	"unsafe"
 
-	"golang.org/x/net/internal/socket"
+	"github.com/wen-long/go-net/internal/socket"
 
 	"golang.org/x/sys/unix"
 )

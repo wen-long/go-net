@@ -11,8 +11,8 @@ import (
 	"net/http"
 	"net/url"
 
-	"golang.org/x/net/http/httpguts"
-	"golang.org/x/net/http2/hpack"
+	"github.com/wen-long/go-net/http/httpguts"
+	"github.com/wen-long/go-net/http2/hpack"
 )
 
 // writeFramer is implemented by any type that is used to write frames.
@@ -138,6 +138,14 @@ func (w writePingAck) writeFrame(ctx writeContext) error {
 }
 
 func (w writePingAck) staysWithinBuffer(max int) bool { return frameHeaderLen+len(w.pf.Data) <= max }
+
+type writePing struct{ pf *PingFrame }
+
+func (w writePing) writeFrame(ctx writeContext) error {
+	return ctx.Framer().WritePing(false, w.pf.Data)
+}
+
+func (w writePing) staysWithinBuffer(max int) bool { return frameHeaderLen+len(w.pf.Data) <= max }
 
 type writeSettingsAck struct{}
 

@@ -18,8 +18,8 @@ import (
 	"syscall"
 	"testing"
 
-	"golang.org/x/net/internal/socket"
-	"golang.org/x/net/nettest"
+	"github.com/wen-long/go-net/internal/socket"
+	"github.com/wen-long/go-net/nettest"
 )
 
 func TestSocket(t *testing.T) {
@@ -371,7 +371,7 @@ import (
 	"log"
 	"net"
 
-	"golang.org/x/net/ipv4"
+	"github.com/wen-long/go-net/ipv4"
 )
 
 var g byte
@@ -406,7 +406,7 @@ import (
 	"log"
 	"net"
 
-	"golang.org/x/net/ipv4"
+	"github.com/wen-long/go-net/ipv4"
 )
 
 func main() {

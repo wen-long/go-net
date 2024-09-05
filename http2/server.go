@@ -35,6 +35,7 @@ import (
 	"io"
 	"log"
 	"math"
+	"math/rand"
 	"net"
 	"net/http"
 	"net/textproto"
@@ -47,8 +48,8 @@ import (
 	"sync"
 	"time"
 
-	"golang.org/x/net/http/httpguts"
-	"golang.org/x/net/http2/hpack"
+	"github.com/wen-long/go-net/http/httpguts"
+	"github.com/wen-long/go-net/http2/hpack"
 )
 
 const (
@@ -448,6 +449,7 @@ func (s *Server) serveConn(c net.Conn, opts *ServeConnOpts, newf func(*serverCon
 		remoteAddrStr:               c.RemoteAddr().String(),
 		bw:                          newBufferedWriter(c),
 		handler:                     opts.handler(),
+		pings:                       make(map[[8]byte]chan struct{}),
 		streams:                     make(map[uint32]*stream),
 		readFrameCh:                 make(chan readFrameResult),
 		wantWriteFrameCh:            make(chan FrameWriteRequest, 8),
@@ -609,7 +611,8 @@ type serverConn struct {
 	tlsState         *tls.ConnectionState   // shared by all handlers, like net/http
 	remoteAddrStr    string
 	writeSched       WriteScheduler
-
+	pings            map[[8]byte]chan struct{} // in flight ping data to notification channel
+	pingsMu          sync.Mutex
 	// Everything following is owned by the serve loop; use serveG.check():
 	serveG                      goroutineLock // used to verify funcs are on serve()
 	pushEnabled                 bool
@@ -1591,11 +1594,50 @@ func (sc *serverConn) processFrame(f Frame) error {
 	}
 }
 
+func (sc *serverConn) Ping(ctx context.Context) (time.Duration, error) {
+	// Generate a random payload
+	c := make(chan struct{})
+
+	f := PingFrame{}
+	var p [8]byte
+	for {
+		if _, err := rand.Read(p[:]); err != nil {
+			return 0, err
+		}
+		sc.pingsMu.Lock()
+		// check for dup before insert
+		if _, found := sc.pings[p]; !found {
+			sc.pings[p] = c
+			sc.pingsMu.Unlock()
+			break
+		}
+		sc.pingsMu.Unlock()
+	}
+	f.Data = p
+
+	start := time.Now()
+	sc.writeFrame(FrameWriteRequest{write: writePing{&f}})
+
+	select {
+	case <-c:
+		return time.Now().Sub(start), nil
+	case <-ctx.Done():
+		return 0, ctx.Err()
+	}
+}
+
 func (sc *serverConn) processPing(f *PingFrame) error {
 	sc.serveG.check()
 	if f.IsAck() {
 		// 6.7 PING: " An endpoint MUST NOT respond to PING frames
 		// containing this flag."
+
+		sc.pingsMu.Lock()
+		if c, ok := sc.pings[f.Data]; ok {
+			close(c)
+			delete(sc.pings, f.Data)
+		}
+		sc.pingsMu.Unlock()
 		return nil
 	}
 	if f.StreamID != 0 {
@@ -2913,6 +2955,13 @@ func (w *responseWriter) Header() http.Header {
 		rws.handlerHeader = make(http.Header)
 	}
 	return rws.handlerHeader
+}
+func (w *responseWriter) Ping(ctx context.Context) (time.Duration, error) {
+	rws := w.rws
+	if rws == nil {
+		panic("Header called after Handler finished")
+	}
+	return rws.conn.Ping(ctx)
 }
 
 // checkWriteHeaderCode is a copy of net/http's checkWriteHeaderCode.

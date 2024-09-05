@@ -12,10 +12,10 @@ import (
 	"runtime"
 	"testing"
 
-	"golang.org/x/net/icmp"
-	"golang.org/x/net/internal/iana"
-	"golang.org/x/net/ipv4"
-	"golang.org/x/net/nettest"
+	"github.com/wen-long/go-net/icmp"
+	"github.com/wen-long/go-net/internal/iana"
+	"github.com/wen-long/go-net/ipv4"
+	"github.com/wen-long/go-net/nettest"
 )
 
 var packetConnReadWriteMulticastUDPTests = []struct {

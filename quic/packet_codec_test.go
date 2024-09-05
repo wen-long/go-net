@@ -15,7 +15,7 @@ import (
 	"testing"
 	"time"
 
-	"golang.org/x/net/quic/qlog"
+	"github.com/wen-long/go-net/quic/qlog"
 )
 
 func TestParseLongHeaderPacket(t *testing.T) {

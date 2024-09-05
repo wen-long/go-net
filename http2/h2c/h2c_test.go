@@ -16,7 +16,7 @@ import (
 	"strings"
 	"testing"
 
-	"golang.org/x/net/http2"
+	"github.com/wen-long/go-net/http2"
 )
 
 func ExampleNewHandler() {

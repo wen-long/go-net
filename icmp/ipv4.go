@@ -9,8 +9,8 @@ import (
 	"net"
 	"runtime"
 
-	"golang.org/x/net/internal/socket"
-	"golang.org/x/net/ipv4"
+	"github.com/wen-long/go-net/internal/socket"
+	"github.com/wen-long/go-net/ipv4"
 )
 
 // freebsdVersion is set in sys_freebsd.go.

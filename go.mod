@@ -1,4 +1,4 @@
-module golang.org/x/net
+module github.com/wen-long/go-net
 
 go 1.18
 

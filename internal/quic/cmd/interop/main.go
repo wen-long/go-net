@@ -25,8 +25,8 @@ import (
 	"path/filepath"
 	"sync"
 
-	"golang.org/x/net/quic"
-	"golang.org/x/net/quic/qlog"
+	"github.com/wen-long/go-net/quic"
+	"github.com/wen-long/go-net/quic/qlog"
 )
 
 var (
